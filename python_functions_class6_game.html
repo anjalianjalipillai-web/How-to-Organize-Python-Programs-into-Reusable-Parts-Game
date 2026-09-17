@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Function Factory — Python Basics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #F7F9FC;
+    --ink: #26243A;
+    --card-bg: #FFFFFF;
+    --purple: #7C4DFF;
+    --pink: #FF4FA3;
+    --teal: #00C2A8;
+    --orange: #FFA630;
+    --blue: #2F8FFF;
+    --green: #33C481;
+    --red: #FF5C5C;
+    --line: #E6E9F2;
+    --shadow: rgba(38,36,58,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; min-height: 100%;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  #app {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 16px 40px;
+  }
+
+  .topbar {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .brand {
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--ink);
+    opacity: 0.6;
+    background: var(--card-bg);
+    padding: 6px 12px;
+    border-radius: 100px;
+    box-shadow: 0 2px 8px var(--shadow);
+    letter-spacing: 0.03em;
+    border: 1px solid var(--line);
+  }
+  .round-pill {
+    font-weight: bold;
+    font-size: 13px;
+    background: var(--purple);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 100px;
+  }
+
+  .screen { width: 100%; max-width: 720px; display: none; }
+  .screen.active { display: block; }
+
+  .hero-title {
+    font-size: clamp(26px, 6vw, 40px);
+    font-weight: bold;
+    text-align: center;
+    margin: 6px 0 4px;
+  }
+  .hero-sub {
+    text-align: center;
+    font-size: clamp(14px, 3.6vw, 17px);
+    opacity: 0.75;
+    max-width: 500px;
+    margin: 0 auto 26px;
+    line-height: 1.5;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 22px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 30px var(--shadow);
+    border: 1px solid var(--line);
+  }
+
+  /* --- Registration --- */
+  .field { margin-bottom: 18px; text-align: left; }
+  .field label { display: block; font-weight: bold; font-size: 15px; margin-bottom: 6px; }
+  .field input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 17px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+  }
+  .field input:focus { outline: none; border-color: var(--purple); }
+  .error-msg {
+    color: var(--red);
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: -10px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  .big-btn {
+    display: block;
+    width: 100%;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 19px;
+    color: white;
+    background: var(--purple);
+    border: none;
+    border-radius: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #5427d6;
+    margin-top: 6px;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #5427d6; }
+  .big-btn.teal { background: var(--teal); box-shadow: 0 6px 0 #00997f; }
+  .big-btn.teal:active { box-shadow: 0 2px 0 #00997f; }
+  .big-btn.pink { background: var(--pink); box-shadow: 0 6px 0 #c9297a; }
+  .big-btn.pink:active { box-shadow: 0 2px 0 #c9297a; }
+
+  /* --- Instructions --- */
+  .instr-list { text-align: left; margin: 0 0 22px; padding: 0; list-style: none; }
+  .instr-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 15px; line-height: 1.5; margin-bottom: 14px;
+  }
+  .instr-num {
+    flex-shrink: 0;
+    width: 28px; height: 28px; border-radius: 50%;
+    color: white; font-weight: bold; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .round-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+  .round-chip {
+    flex: 1; min-width: 140px;
+    border-radius: 14px; padding: 12px; color: white; font-weight: bold; font-size: 13px; text-align: center;
+  }
+  .round-chip .n { font-size: 20px; display: block; margin-bottom: 2px; }
+
+  /* --- Quiz --- */
+  .progress-wrap { margin-bottom: 18px; }
+  .progress-bar-bg {
+    width: 100%; height: 10px; background: rgba(0,0,0,0.07); border-radius: 100px; overflow: hidden;
+  }
+  .progress-bar-fill { height: 100%; background: var(--teal); border-radius: 100px; transition: width 0.3s ease; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; opacity: 0.65; margin-top: 6px; }
+
+  .code-box {
+    background: #1E1E2E;
+    color: #E4E4F0;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 14px 0;
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  .q-text { font-size: clamp(17px, 4.4vw, 20px); font-weight: bold; margin: 0 0 18px; line-height: 1.4; }
+
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .opt-btn {
+    font-family: inherit;
+    text-align: left;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .opt-btn:hover { border-color: var(--purple); }
+  .opt-btn.correct { background: var(--green); border-color: var(--green); color: white; }
+  .opt-btn.incorrect { background: var(--red); border-color: var(--red); color: white; }
+  .opt-btn.disabled { pointer-events: none; opacity: 0.55; }
+  .opt-btn.disabled.correct, .opt-btn.disabled.incorrect { opacity: 1; }
+
+  .feedback-box {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.good { background: rgba(51,196,129,0.15); color: #1c7d51; }
+  .feedback-box.bad { background: rgba(255,92,92,0.15); color: #b3312f; }
+  .feedback-box strong { display: block; margin-bottom: 4px; font-size: 15px; }
+
+  .next-btn { margin-top: 18px; display: none; }
+  .next-btn.show { display: block; }
+
+  /* --- Results --- */
+  .score-hero { text-align: center; margin-bottom: 22px; }
+  .score-big { font-size: clamp(50px, 14vw, 74px); font-weight: bold; color: var(--purple); line-height: 1; }
+  .score-of { font-size: 16px; opacity: 0.65; font-weight: bold; }
+  .score-msg { font-size: 18px; font-weight: bold; margin-top: 10px; }
+
+  .breakdown { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .bd-card { flex: 1; min-width: 150px; border-radius: 14px; padding: 14px; text-align: center; color: white; }
+  .bd-card .bd-n { font-size: 24px; font-weight: bold; }
+  .bd-card .bd-l { font-size: 12px; font-weight: bold; opacity: 0.92; }
+
+  .name-line { text-align: center; font-size: 15px; margin-bottom: 20px; opacity: 0.8; }
+  .name-line b { color: var(--ink); }
+
+  .status-msg { text-align: center; font-size: 13px; font-weight: bold; margin-top: 12px; min-height: 18px; }
+  .status-msg.ok { color: var(--green); }
+  .status-msg.err { color: var(--red); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">YOUNG IT GERMANY</div>
+    <div class="round-pill" id="roundPill" style="display:none;"></div>
+  </div>
+
+  <!-- REGISTER -->
+  <section class="screen active" id="screen-register">
+    <div class="hero-title">🧩 Function Factory</div>
+    <div class="hero-sub">How to Organize Python Programs into Reusable Parts — Class 6 Activity</div>
+    <div class="card">
+      <div class="field">
+        <label for="inputName">Your Name</label>
+        <input type="text" id="inputName" placeholder="e.g. Amir Khan" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="inputClass">Your Class / Section</label>
+        <input type="text" id="inputClass" placeholder="e.g. Class 6 - A" autocomplete="off">
+      </div>
+      <div class="error-msg" id="registerError">Please fill in both your name and class to start.</div>
+      <button class="big-btn" id="registerBtn">Start the Activity 🚀</button>
+    </div>
+  </section>
+
+  <!-- INSTRUCTIONS -->
+  <section class="screen" id="screen-instructions">
+    <div class="hero-title">How This Activity Works</div>
+    <div class="hero-sub">Read this once, then jump in — it only takes a few minutes!</div>
+    <div class="card">
+      <ul class="instr-list">
+        <li><span class="instr-num" style="background:var(--purple)">1</span>
+          <span>You will answer <b>12 quick questions</b> split into 3 rounds. Tap the answer you think is correct.</span></li>
+        <li><span class="instr-num" style="background:var(--teal)">2</span>
+          <span>After each answer, you'll instantly see if you were right — and a short explanation to help the idea stick.</span></li>
+        <li><span class="instr-num" style="background:var(--orange)">3</span>
+          <span>There's no timer and no penalty for a wrong guess — read each bit of code carefully like a real coder.</span></li>
+        <li><span class="instr-num" style="background:var(--pink)">4</span>
+          <span>At the end, you'll see your score and can <b>download your result as a PDF</b> to keep or share with your teacher.</span></li>
+      </ul>
+      <div class="round-legend">
+        <div class="round-chip" style="background:var(--purple)"><span class="n">🤔</span>Round 1<br>Why Functions?</div>
+        <div class="round-chip" style="background:var(--teal)"><span class="n">🛠️</span>Round 2<br>Define &amp; Call</div>
+        <div class="round-chip" style="background:var(--orange)"><span class="n">♻️</span>Round 3<br>Reuse &amp; Parameters</div>
+      </div>
+      <button class="big-btn teal" id="beginQuizBtn">I'm Ready — Begin!</button>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="screen-quiz">
+    <div class="card">
+      <div class="progress-wrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="progress-label"><span id="progressText">Question 1 of 12</span><span id="progressRound">Round 1: Why Functions?</span></div>
+      </div>
+      <div class="q-text" id="qText"></div>
+      <div class="code-box" id="qCode" style="display:none;"></div>
+      <div class="options" id="qOptions"></div>
+      <div class="feedback-box" id="feedbackBox">
+        <strong id="feedbackTitle"></strong>
+        <span id="feedbackText"></span>
+      </div>
+      <button class="big-btn next-btn" id="nextBtn">Next Question →</button>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="screen" id="screen-results">
+    <div class="hero-title">🎉 Activity Complete!</div>
+    <div class="card">
+      <div class="name-line">Great work, <b id="resultName"></b> (<span id="resultClass"></span>)!</div>
+      <div class="score-hero">
+        <div class="score-big" id="scoreBig">0</div>
+        <div class="score-of">out of 12 correct</div>
+        <div class="score-msg" id="scoreMsg"></div>
+      </div>
+      <div class="breakdown">
+        <div class="bd-card" style="background:var(--purple)"><div class="bd-n" id="bdWhy">0/4</div><div class="bd-l">🤔 Why Functions?</div></div>
+        <div class="bd-card" style="background:var(--teal)"><div class="bd-n" id="bdDefine">0/4</div><div class="bd-l">🛠️ Define &amp; Call</div></div>
+        <div class="bd-card" style="background:var(--orange)"><div class="bd-n" id="bdReuse">0/4</div><div class="bd-l">♻️ Reuse</div></div>
+      </div>
+      <button class="big-btn pink" id="downloadBtn">⬇ Download My Result (PDF)</button>
+      <div class="status-msg" id="downloadStatus"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var QUESTIONS = [
+    // Round 1: Why organize code into functions
+    { round: 1, q: "Why do programmers organize a program into functions?",
+      code: null,
+      options: ["To break a big program into small, reusable pieces", "To make the code repeat itself by accident", "To make the program run slower on purpose", "To hide the code from the computer"], correct: 0,
+      why: "Functions let us split a big program into smaller named pieces that each do one job — making the code easier to read, fix, and reuse." },
+    { round: 1, q: "What is a function in Python?",
+      code: null,
+      options: ["A type of variable", "A named block of code that performs a task and can be reused", "An error message", "A comment that explains the code"], correct: 1,
+      why: "A function is a reusable, named block of instructions — you can run it (call it) as many times as you need." },
+    { round: 1, q: "What's a good reason to use a function instead of copying the same lines of code many times?",
+      code: "# Without a function:\nprint(3 * 3)\nprint(5 * 5)\nprint(9 * 9)\n\n# With a function, you write the logic once and reuse it!",
+      options: ["It makes mistakes harder to fix", "If you need to fix something, you only fix it in one place", "It makes the file confusing on purpose", "It stops the program from running"], correct: 1,
+      why: "With a function, the logic lives in one place. Fix a bug once inside the function, and every call to it is fixed too." },
+    { round: 1, q: "What do we call code that repeats the same lines over and over instead of using a function?",
+      code: null,
+      options: ["Clean code", "Repeated code (something we usually try to avoid)", "A parameter", "A loop-only program"], correct: 1,
+      why: "Repeating the same code again and again is a sign that it should probably be turned into a function instead." },
+
+    // Round 2: Defining and calling
+    { round: 2, q: "What will this code print?",
+      code: "def greet():\n    print(\"Hello!\")\n\ngreet()",
+      options: ["Nothing", "greet()", "Hello!", "def greet"], correct: 2,
+      why: "def greet(): creates the function. Writing greet() afterwards calls it, which runs the print(\"Hello!\") line inside." },
+    { round: 2, q: "Which keyword is used to define (create) a function in Python?",
+      code: null,
+      options: ["func", "def", "function", "define"], correct: 1,
+      why: "Python uses the def keyword, followed by the function's name and parentheses, to define a function." },
+    { round: 2, q: "Look at this function. What must you do to actually run the code inside it?",
+      code: "def add_numbers():\n    print(2 + 3)",
+      options: ["Nothing, it runs automatically as soon as Python reads it", "Call it by writing add_numbers()", "Delete the def line", "Print the function's name as plain text"], correct: 1,
+      why: "Defining a function only creates it — it does not run the code inside. You must call it, e.g. add_numbers(), to run it." },
+    { round: 2, q: "What happens if you define a function but never call it anywhere in your program?",
+      code: null,
+      options: ["Python shows an error", "The code inside it never runs", "It runs once automatically at the start", "It runs every time the program ends"], correct: 1,
+      why: "A defined-but-uncalled function just sits there ready to be used — its code never actually executes until something calls it." },
+
+    // Round 3: Reusability and parameters
+    { round: 3, q: "What does this program print?",
+      code: "def square(number):\n    print(number * number)\n\nsquare(4)\nsquare(6)",
+      options: ["16 then 36", "4 then 6", "10", "Error"], correct: 0,
+      why: "number is a parameter. square(4) makes number = 4, printing 16. square(6) makes number = 6, printing 36 — one function, two different results!" },
+    { round: 3, q: "What is a parameter in a function?",
+      code: null,
+      options: ["A value you give the function so it can use it", "The name of the Python file", "A type of comment", "An error code"], correct: 0,
+      why: "A parameter is like a placeholder inside the function that receives whatever value you pass in when you call it." },
+    { round: 3, q: "Which function definition correctly accepts a value called name?",
+      code: null,
+      options: ["def greet(name):", "def greet[name]:", "def greet name():", "def greet(name);"], correct: 0,
+      why: "Parameters go inside round brackets after the function name, and the line ends with a colon: def greet(name):" },
+    { round: 3, q: "Why are parameters useful for organizing reusable code?",
+      code: null,
+      options: ["They let one function work with many different values instead of writing a new function each time", "They make functions run slower", "They are required to give a function a name", "They delete the function after it's used once"], correct: 0,
+      why: "Instead of writing square_of_4(), square_of_6(), and so on, one function with a parameter handles every case." }
+  ];
+
+  var ROUND_NAMES = { 1: "Round 1: Why Functions?", 2: "Round 2: Define & Call", 3: "Round 3: Reuse & Parameters" };
+  var ROUND_PILL_COLOR = { 1: "var(--purple)", 2: "var(--teal)", 3: "var(--orange)" };
+
+  var studentName = "", studentClass = "";
+  var currentIndex = 0;
+  var score = 0;
+  var roundScores = { 1: 0, 2: 0, 3: 0 };
+  var answered = false;
+
+  var screens = {
+    register: document.getElementById('screen-register'),
+    instructions: document.getElementById('screen-instructions'),
+    quiz: document.getElementById('screen-quiz'),
+    results: document.getElementById('screen-results')
+  };
+  var roundPill = document.getElementById('roundPill');
+
+  function showScreen(name) {
+    Object.keys(screens).forEach(function (k) {
+      screens[k].classList.toggle('active', k === name);
+    });
+    roundPill.style.display = (name === 'quiz') ? 'inline-block' : 'none';
+  }
+
+  // ---- Registration ----
+  document.getElementById('registerBtn').addEventListener('click', function () {
+    var nameVal = document.getElementById('inputName').value.trim();
+    var classVal = document.getElementById('inputClass').value.trim();
+    var errEl = document.getElementById('registerError');
+    if (!nameVal || !classVal) {
+      errEl.classList.add('show');
+      return;
+    }
+    errEl.classList.remove('show');
+    studentName = nameVal;
+    studentClass = classVal;
+    showScreen('instructions');
+  });
+
+  // ---- Instructions ----
+  document.getElementById('beginQuizBtn').addEventListener('click', function () {
+    currentIndex = 0;
+    score = 0;
+    roundScores = { 1: 0, 2: 0, 3: 0 };
+    showScreen('quiz');
+    renderQuestion();
+  });
+
+  // ---- Quiz ----
+  var qText = document.getElementById('qText');
+  var qCode = document.getElementById('qCode');
+  var qOptions = document.getElementById('qOptions');
+  var feedbackBox = document.getElementById('feedbackBox');
+  var feedbackTitle = document.getElementById('feedbackTitle');
+  var feedbackText = document.getElementById('feedbackText');
+  var nextBtn = document.getElementById('nextBtn');
+  var progressFill = document.getElementById('progressFill');
+  var progressText = document.getElementById('progressText');
+  var progressRound = document.getElementById('progressRound');
+
+  function renderQuestion() {
+    answered = false;
+    var item = QUESTIONS[currentIndex];
+    progressFill.style.width = Math.round((currentIndex / QUESTIONS.length) * 100) + '%';
+    progressText.textContent = 'Question ' + (currentIndex + 1) + ' of ' + QUESTIONS.length;
+    progressRound.textContent = ROUND_NAMES[item.round];
+    roundPill.textContent = ROUND_NAMES[item.round];
+    roundPill.style.background = ROUND_PILL_COLOR[item.round];
+
+    qText.textContent = item.q;
+    if (item.code) {
+      qCode.style.display = 'block';
+      qCode.textContent = item.code;
+    } else {
+      qCode.style.display = 'none';
+      qCode.textContent = '';
+    }
+
+    qOptions.innerHTML = '';
+    item.options.forEach(function (opt, idx) {
+      var btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', function () { selectAnswer(idx, btn); });
+      qOptions.appendChild(btn);
+    });
+
+    feedbackBox.classList.remove('show', 'good', 'bad');
+    nextBtn.classList.remove('show');
+  }
+
+  function selectAnswer(idx, btnEl) {
+    if (answered) return;
+    answered = true;
+    var item = QUESTIONS[currentIndex];
+    var allBtns = qOptions.querySelectorAll('.opt-btn');
+    allBtns.forEach(function (b) { b.classList.add('disabled'); });
+
+    var isCorrect = idx === item.correct;
+    if (isCorrect) {
+      btnEl.classList.add('correct');
+      score++;
+      roundScores[item.round]++;
+      feedbackBox.classList.add('good');
+      feedbackTitle.textContent = "Correct! ✅";
+    } else {
+      btnEl.classList.add('incorrect');
+      allBtns[item.correct].classList.add('correct');
+      feedbackBox.classList.add('bad');
+      feedbackTitle.textContent = "Not quite — here's why:";
+    }
+    feedbackText.textContent = item.why;
+    feedbackBox.classList.add('show');
+    nextBtn.classList.add('show');
+  }
+
+  nextBtn.addEventListener('click', function () {
+    currentIndex++;
+    if (currentIndex >= QUESTIONS.length) {
+      showResults();
+    } else {
+      renderQuestion();
+    }
+  });
+
+  // ---- Results ----
+  function showResults() {
+    progressFill.style.width = '100%';
+    document.getElementById('resultName').textContent = studentName;
+    document.getElementById('resultClass').textContent = studentClass;
+    document.getElementById('scoreBig').textContent = String(score);
+    document.getElementById('bdWhy').textContent = roundScores[1] + '/4';
+    document.getElementById('bdDefine').textContent = roundScores[2] + '/4';
+    document.getElementById('bdReuse').textContent = roundScores[3] + '/4';
+
+    var msg;
+    if (score >= 10) msg = "🌟 Function Master! You really get this.";
+    else if (score >= 7) msg = "👍 Great Coder! Just a little more practice.";
+    else if (score >= 4) msg = "💡 Getting There! Review and try again.";
+    else msg = "🔁 Keep Practicing! Every coder starts somewhere.";
+    document.getElementById('scoreMsg').textContent = msg;
+
+    showScreen('results');
+  }
+
+  // ---- PDF download ----
+  function buildPdf() {
+    var jsPDFCtor = window.jspdf && window.jspdf.jsPDF;
+    if (!jsPDFCtor) return null;
+    var doc = new jsPDFCtor({ unit: 'pt', format: 'a4' });
+    var pageW = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(124, 77, 255);
+    doc.rect(0, 0, pageW, 90, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text('Function Factory — Activity Result', 40, 40);
+    doc.setFontSize(11);
+    doc.text('Young IT Germany', 40, 62);
+
+    doc.setTextColor(38, 36, 58);
+    doc.setFontSize(13);
+    var y = 130;
+    doc.text('Student Name:  ' + studentName, 40, y); y += 22;
+    doc.text('Class / Section:  ' + studentClass, 40, y); y += 22;
+    var today = new Date();
+    doc.text('Date:  ' + today.toLocaleDateString(), 40, y); y += 40;
+
+    doc.setFontSize(18);
+    doc.text('Topic: Organizing Python Programs into Reusable Parts', 40, y); y += 34;
+
+    doc.setFontSize(28);
+    doc.setTextColor(124, 77, 255);
+    doc.text('Score: ' + score + ' / 12', 40, y); y += 36;
+
+    doc.setFontSize(13);
+    doc.setTextColor(38, 36, 58);
+    doc.text('Round breakdown:', 40, y); y += 20;
+    doc.text('  Round 1 — Why Functions?:  ' + roundScores[1] + ' / 4', 40, y); y += 18;
+    doc.text('  Round 2 — Define & Call:  ' + roundScores[2] + ' / 4', 40, y); y += 18;
+    doc.text('  Round 3 — Reuse & Parameters:  ' + roundScores[3] + ' / 4', 40, y); y += 32;
+
+    var msg;
+    if (score >= 10) msg = 'Function Master! You really get this.';
+    else if (score >= 7) msg = 'Great Coder! Just a little more practice.';
+    else if (score >= 4) msg = 'Getting There! Review and try again.';
+    else msg = 'Keep Practicing! Every coder starts somewhere.';
+    doc.setFontSize(14);
+    doc.text(msg, 40, y);
+
+    return doc;
+  }
+
+  var downloadBtn = document.getElementById('downloadBtn');
+  var downloadStatus = document.getElementById('downloadStatus');
+
+  downloadBtn.addEventListener('click', function () {
+    downloadStatus.className = 'status-msg';
+    downloadStatus.textContent = '';
+    var doc = buildPdf();
+    if (!doc) {
+      downloadStatus.className = 'status-msg err';
+      downloadStatus.textContent = "Sorry, the PDF tool didn't load — please try again.";
+      return;
+    }
+    var blob = doc.output('blob');
+    var filename = 'Function_Factory_Result_' + studentName.replace(/\s+/g, '_') + '.pdf';
+
+    var claudeGlobal = window.claude;
+    if (claudeGlobal && typeof claudeGlobal.use === 'function') {
+      claudeGlobal.use('downloads').then(function (downloads) {
+        if (!downloads) { fallbackDownload(blob, filename); return; }
+        downloads.save({ filename: filename, data: blob }).then(function () {
+          downloadStatus.className = 'status-msg ok';
+          downloadStatus.textContent = 'Saved! Check your downloads.';
+        }).catch(function (err) {
+          if (err && err.code === 'declined') {
+            downloadStatus.textContent = '';
+          } else {
+            fallbackDownload(blob, filename);
+          }
+        });
+      }).catch(function () {
+        fallbackDownload(blob, filename);
+      });
+    } else {
+      fallbackDownload(blob, filename);
+    }
+  });
+
+  function fallbackDownload(blob, filename) {
+    try {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      downloadStatus.className = 'status-msg ok';
+      downloadStatus.textContent = 'Downloaded!';
+    } catch (e) {
+      downloadStatus.className = 'status-msg err';
+      downloadStatus.textContent = "Couldn't download automatically — please try again.";
+    }
+  }
+})();
+</script>
+</body>
+</html>
